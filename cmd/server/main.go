@@ -16,7 +16,7 @@ const CONNECTION_STRING = "amqp://guest:guest@localhost:5672/"
 func main() {
 	conn, err := amqp.Dial(CONNECTION_STRING)
 	if err != nil {
-		log.Fatalf("unexpected err!: %v", err)
+		log.Fatalf("unexpected err when connecting: %v", err)
 	}
 	defer conn.Close()
 
@@ -24,7 +24,7 @@ func main() {
 
 	rmqChan, err := conn.Channel()
 	if err != nil {
-		log.Fatalf("unexpected err!: %v", err)
+		log.Fatalf("unexpected err when creating channel: %v", err)
 	}
 
 	_, _, err = pubsub.DeclareAndBind(
@@ -35,7 +35,7 @@ func main() {
 		pubsub.Durable,
 	)
 	if err != nil {
-		log.Fatalf("unexpected err: %v", err)
+		log.Fatalf("unexpected err when declaring and binding log: %v", err)
 	}
 
 	gamelogic.PrintServerHelp()

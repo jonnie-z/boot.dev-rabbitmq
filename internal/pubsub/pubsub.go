@@ -45,7 +45,10 @@ func DeclareAndBind(
 		queueType != Durable,
 		queueType != Durable,
 		false,
-		nil,
+		// nil,
+		amqp.Table{
+			"x-dead-letter-exchange": "peril_dlx",
+		},
 	)
 	if err != nil {
 		return nil, amqp.Queue{}, err
@@ -65,13 +68,21 @@ func DeclareAndBind(
 	return rmqChan, q, nil
 }
 
+type AckType int
+
+const (
+	Ack AckType = iota
+	NackRequeue
+	NackDiscard
+)
+
 func SubscribeJson[T any](
     conn *amqp.Connection,
     exchange,
     queueName,
     key string,
     queueType SimpleQueueType, // an enum to represent "durable" or "transient"
-    handler func(T),
+    handler func(T) AckType,
 ) error {
 	ch, queue, err := DeclareAndBind(
 		conn,
@@ -106,9 +117,16 @@ func SubscribeJson[T any](
 			if err != nil {
 				fmt.Printf("could not decode message: %v\n", err)
 			}
-			handler(b)
+			ackType := handler(b)
 
-			delivery.Ack(false)
+			switch ackType {
+			case Ack:
+				delivery.Ack(false)
+			case NackRequeue:
+				delivery.Nack(false, true)
+			case NackDiscard:
+				delivery.Nack(false, false)
+			}
 		}
 	}()
 
