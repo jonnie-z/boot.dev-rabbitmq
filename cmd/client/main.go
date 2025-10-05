@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"time"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -18,7 +20,7 @@ func main() {
 		log.Fatalf("unexpected err!: %v", err)
 	}
 	defer conn.Close()
-	
+
 	fmt.Println("Connection successful!")
 
 	ch, err := conn.Channel()
@@ -49,7 +51,7 @@ func main() {
 		conn,
 		routing.ExchangePerilTopic,
 		fmt.Sprintf("%s.%s", routing.ArmyMovesPrefix, gameState.GetUsername()),
-		routing.ArmyMovesPrefix + ".*",
+		routing.ArmyMovesPrefix+".*",
 		pubsub.Transient,
 		handlerMove(gameState, ch),
 	)
@@ -61,9 +63,9 @@ func main() {
 		conn,
 		routing.ExchangePerilTopic,
 		routing.WarRecognitionsPrefix,
-		routing.WarRecognitionsPrefix + ".*",
+		routing.WarRecognitionsPrefix+".*",
 		pubsub.Durable,
-		handlerWar(gameState),
+		handlerWar(gameState, ch),
 	)
 	if err != nil {
 		log.Fatalf("could not subscribe to war declarations: %v", err)
@@ -100,7 +102,29 @@ func main() {
 		case "help":
 			gamelogic.PrintClientHelp()
 		case "spam":
-			fmt.Println("Spamming not allowed yet!")
+			if len(input) < 2 {
+				fmt.Printf("USAGE: spawn {int}")
+			}
+
+			amt, err := strconv.Atoi(input[1])
+			if err != nil {
+				fmt.Printf("error converting amount: %v", err)
+			}
+
+			for range amt {
+				msg := gamelogic.GetMaliciousLog()
+
+				pubsub.PublishGob(
+					ch,
+					routing.ExchangePerilTopic,
+					fmt.Sprintf("%s.%s", routing.GameLogSlug, gameState.GetUsername()),
+					routing.GameLog{
+						CurrentTime: time.Now(),
+						Message: msg,
+						Username: gameState.GetUsername(),
+					},
+				)
+			}
 		case "quit":
 			gamelogic.PrintQuit()
 			running = false

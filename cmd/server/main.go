@@ -27,15 +27,16 @@ func main() {
 		log.Fatalf("unexpected err when creating channel: %v", err)
 	}
 
-	_, _, err = pubsub.DeclareAndBind(
+	err = pubsub.SubscribeGob(
 		conn,
 		routing.ExchangePerilTopic,
 		routing.GameLogSlug,
 		fmt.Sprintf("%s.%s", routing.GameLogSlug, "*"),
 		pubsub.Durable,
+		handlerLog(),
 	)
 	if err != nil {
-		log.Fatalf("unexpected err when declaring and binding log: %v", err)
+		log.Fatalf("unexpected err when subscribing to log: %v", err)
 	}
 
 	gamelogic.PrintServerHelp()
