@@ -40,7 +40,7 @@ func main() {
 	gameState := gamelogic.NewGameState(username)
 	fmt.Printf("gs in main: %v\n", &gameState)
 
-	pubsub.SubscribeJSON(
+	pubsub.SubscribeJson(
 		conn,
 		routing.ExchangePerilDirect,
 		fmt.Sprintf("%s.%s", routing.PauseKey, username),

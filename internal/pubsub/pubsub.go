@@ -10,26 +10,14 @@ import (
 )
 
 func PublishJson[T any](ch *amqp.Channel, exchange, key string, val T) error {
-	jsonBytes := &bytes.Buffer{}
-	encoder := json.NewEncoder(jsonBytes)
-	err := encoder.Encode(val)
+	dat, err := json.Marshal(val)
 	if err != nil {
 		return err
 	}
-
-	ch.PublishWithContext(
-		context.Background(),
-		exchange,
-		key,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        jsonBytes.Bytes(),
-		},
-	)
-
-	return nil
+	return ch.PublishWithContext(context.Background(), exchange, key, false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        dat,
+	})
 }
 
 type SimpleQueueType int
@@ -77,7 +65,7 @@ func DeclareAndBind(
 	return rmqChan, q, nil
 }
 
-func SubscribeJSON[T any](
+func SubscribeJson[T any](
     conn *amqp.Connection,
     exchange,
     queueName,
@@ -113,8 +101,11 @@ func SubscribeJSON[T any](
 		defer ch.Close()
 		for delivery := range deliveryCh {
 			var b T
-			decoder := json.NewDecoder(bytes.NewBuffer(delivery.Body))
-			decoder.Decode(b)
+			decoder := json.NewDecoder(bytes.NewReader(delivery.Body))
+			err := decoder.Decode(&b)
+			if err != nil {
+				fmt.Printf("could not decode message: %v\n", err)
+			}
 			handler(b)
 
 			delivery.Ack(false)
