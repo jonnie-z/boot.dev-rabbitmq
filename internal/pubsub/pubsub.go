@@ -78,12 +78,12 @@ const (
 )
 
 func SubscribeJson[T any](
-    conn *amqp.Connection,
-    exchange,
-    queueName,
-    key string,
-    queueType SimpleQueueType, // an enum to represent "durable" or "transient"
-    handler func(T) AckType,
+	conn *amqp.Connection,
+	exchange,
+	queueName,
+	key string,
+	queueType SimpleQueueType, // an enum to represent "durable" or "transient"
+	handler func(T) AckType,
 ) error {
 	ch, queue, err := DeclareAndBind(
 		conn,
@@ -157,12 +157,12 @@ func PublishGob[T any](ch *amqp.Channel, exchange, key string, val T) error {
 }
 
 func SubscribeGob[T any](
-    conn *amqp.Connection,
-    exchange,
-    queueName,
-    key string,
-    queueType SimpleQueueType, // an enum to represent "durable" or "transient"
-    handler func(T) AckType,
+	conn *amqp.Connection,
+	exchange,
+	queueName,
+	key string,
+	queueType SimpleQueueType, // an enum to represent "durable" or "transient"
+	handler func(T) AckType,
 ) error {
 	ch, queue, err := DeclareAndBind(
 		conn,

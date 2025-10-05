@@ -120,8 +120,8 @@ func main() {
 					fmt.Sprintf("%s.%s", routing.GameLogSlug, gameState.GetUsername()),
 					routing.GameLog{
 						CurrentTime: time.Now(),
-						Message: msg,
-						Username: gameState.GetUsername(),
+						Message:     msg,
+						Username:    gameState.GetUsername(),
 					},
 				)
 			}
